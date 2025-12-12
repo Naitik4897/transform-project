@@ -33,11 +33,12 @@ class AuthController {
       const token = AuthController.generateToken(user);
       AuthController.setAuthCookie(res, token);
 
-      await redisClient.set(
+      // Cache user in Redis (non-blocking)
+      redisClient.set(
         CACHE_KEYS.USER(user._id),
         user.toJSON(),
         CACHE_TTL.USER
-      );
+      ).catch(err => console.error('Redis cache error:', err));
 
       res.status(201).json({
         success: true,
@@ -81,16 +82,16 @@ class AuthController {
       user.lastLogin = new Date();
       await user.save();
 
-      await redisClient.del(CACHE_KEYS.USER(user._id));
-
       const token = AuthController.generateToken(user);
       AuthController.setAuthCookie(res, token);
 
-      await redisClient.set(
+      // Update Redis cache (non-blocking)
+      redisClient.del(CACHE_KEYS.USER(user._id)).catch(err => console.error('Redis delete error:', err));
+      redisClient.set(
         CACHE_KEYS.USER(user._id),
         user.toJSON(),
         CACHE_TTL.USER
-      );
+      ).catch(err => console.error('Redis cache error:', err));
 
       res.status(200).json({
         success: true,

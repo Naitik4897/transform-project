@@ -5,10 +5,32 @@ let redisClient;
 try {
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     // Use Upstash Redis for production (serverless-friendly)
-    redisClient = new Redis({
+    const upstashClient = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
+    
+    // Wrap Upstash client to handle JSON serialization
+    redisClient = {
+      get: async (key) => {
+        const value = await upstashClient.get(key);
+        return value;
+      },
+      set: async (key, value, ttl) => {
+        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+        if (ttl) {
+          return await upstashClient.setex(key, ttl, serialized);
+        }
+        return await upstashClient.set(key, serialized);
+      },
+      del: async (key) => {
+        return await upstashClient.del(key);
+      },
+      setex: async (key, seconds, value) => {
+        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+        return await upstashClient.setex(key, seconds, serialized);
+      },
+    };
     console.log('✅ Redis (Upstash) connected');
   } else {
     // Fallback to in-memory cache if Redis not configured
