@@ -187,14 +187,13 @@ class AuthController {
     
     const cookieOptions = {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: isProduction, // Must be true in production for SameSite=None
+      sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-origin
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days to match JWT expiry
+      path: '/', // Ensure cookie is sent with all requests
     };
     
-    if (isProduction && process.env.COOKIE_DOMAIN) {
-      cookieOptions.domain = process.env.COOKIE_DOMAIN;
-    }
+    // Don't set domain for Render deployments (they handle this automatically)
     
     res.cookie('token', token, cookieOptions);
   }
