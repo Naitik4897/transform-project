@@ -73,9 +73,18 @@ export const AuthProvider = ({ children }) => {
     try {
       await authAPI.logout();
       setUser(null);
-      window.location.href = '/login';
+      // Force clear any cached state
+      localStorage.clear();
+      sessionStorage.clear();
+      // Use window.location for full page reload to clear all state
+      window.location.replace('/login');
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if logout API fails, clear local state
+      setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace('/login');
     }
   };
 

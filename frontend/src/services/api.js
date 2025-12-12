@@ -37,7 +37,8 @@ api.interceptors.response.use(
       // Only redirect if it's not the initial auth check
       if (!error.config?.url?.includes('/auth/me')) {
         localStorage.clear();
-        window.location.href = '/login';
+        sessionStorage.clear();
+        window.location.replace('/login');
       }
     }
     
