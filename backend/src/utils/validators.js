@@ -40,11 +40,6 @@ const authValidation = {
         'string.min': 'Password must be at least 8 characters',
         'any.required': 'Password is required',
       }),
-    confirmPassword: Joi.string()
-      .valid(Joi.ref('password'))
-      .messages({
-        'any.only': 'Passwords do not match',
-      }),
     role: Joi.string()
       .valid('admin', 'manager', 'qa', 'agent')
       .default('agent'),
