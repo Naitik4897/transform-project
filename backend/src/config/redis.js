@@ -1,94 +1,54 @@
-// Filename: redis.js
-// Author: Naitik Maisuriya
-// Description: Redis client configuration for caching and session management
+import { Redis } from '@upstash/redis';
 
-import redis from 'redis';
+let redisClient;
 
-class RedisClient {
-  constructor() {
-    this.client = null;
-    this.connect();
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    // Use Upstash Redis for production (serverless-friendly)
+    redisClient = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    console.log('✅ Redis (Upstash) connected');
+  } else {
+    // Fallback to in-memory cache if Redis not configured
+    console.warn('⚠️  Redis not configured - using in-memory cache');
+    const cache = new Map();
+    redisClient = {
+      get: async (key) => cache.get(key) || null,
+      set: async (key, value, options) => {
+        cache.set(key, value);
+        if (options?.ex) {
+          setTimeout(() => cache.delete(key), options.ex * 1000);
+        }
+        return 'OK';
+      },
+      del: async (key) => {
+        cache.delete(key);
+        return 1;
+      },
+      setex: async (key, seconds, value) => {
+        cache.set(key, value);
+        setTimeout(() => cache.delete(key), seconds * 1000);
+        return 'OK';
+      },
+    };
   }
-
-  async connect() {
-    try {
-      const redisHost = process.env.REDIS_HOST || 'localhost';
-      const redisPort = process.env.REDIS_PORT || '6379';
-      
-      this.client = redis.createClient({
-        url: `redis://${redisHost}:${redisPort}`,
-        password: process.env.REDIS_PASSWORD || undefined,
-      });
-
-      this.client.on('error', (err) => {
-        console.error('Redis Client Error:', err);
-      });
-
-      await this.client.connect();
-    } catch (error) {
-      console.error('Failed to connect to Redis:', error);
-    }
-  }
-
-  async set(key, value, expiry = 3600) {
-    try {
-      await this.client.set(key, JSON.stringify(value), {
-        EX: expiry,
-      });
-      return true;
-    } catch (error) {
-      console.error('Redis set error:', error);
-      return false;
-    }
-  }
-
-  async get(key) {
-    try {
-      const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error('Redis get error:', error);
-      return null;
-    }
-  }
-
-  async del(key) {
-    try {
-      await this.client.del(key);
-      return true;
-    } catch (error) {
-      console.error('Redis del error:', error);
-      return false;
-    }
-  }
-
-  async exists(key) {
-    try {
-      const result = await this.client.exists(key);
-      return result === 1;
-    } catch (error) {
-      console.error('Redis exists error:', error);
-      return false;
-    }
-  }
-
-  async deletePattern(pattern) {
-    try {
-      if (!this.client) {
-        return false;
-      }
-      const keys = await this.client.keys(pattern);
-      if (keys && keys.length > 0) {
-        await this.client.del(...keys);
-      }
-      return true;
-    } catch (error) {
-      console.error('Redis deletePattern error:', error);
-      return false;
-    }
-  }
+} catch (error) {
+  console.error('❌ Redis connection error:', error);
+  // Fallback to in-memory cache
+  const cache = new Map();
+  redisClient = {
+    get: async (key) => cache.get(key) || null,
+    set: async (key, value) => {
+      cache.set(key, value);
+      return 'OK';
+    },
+    del: async (key) => {
+      cache.delete(key);
+      return 1;
+    },
+  };
 }
-
-const redisClient = new RedisClient();
 
 export default redisClient;
