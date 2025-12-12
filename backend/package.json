@@ -17,6 +17,7 @@
   "license": "MIT",
   "description": "Backend for Transform Project - role based dashboard",
   "dependencies": {
+    "@upstash/redis": "^1.35.8",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
