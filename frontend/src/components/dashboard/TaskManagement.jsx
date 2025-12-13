@@ -60,9 +60,11 @@ const TaskManagement = () => {
   };
 
   useEffect(() => {
-    fetchTasks();
-    fetchUsers();
-  }, []);
+    if (user) {
+      fetchTasks();
+      fetchUsers();
+    }
+  }, [user]);
 
   // Handle task creation
   const handleCreateTask = async (e) => {

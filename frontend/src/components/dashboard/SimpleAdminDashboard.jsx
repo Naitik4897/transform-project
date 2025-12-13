@@ -25,8 +25,11 @@ const SimpleAdminDashboard = () => {
   });
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    // Only fetch users if we have a valid user session
+    if (user) {
+      fetchUsers();
+    }
+  }, [user]);
 
   const fetchUsers = async () => {
     try {

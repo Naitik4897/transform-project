@@ -19,19 +19,31 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    const isBlacklisted = await redisClient.exists(`blacklist:${token}`);
-    if (isBlacklisted) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token has been invalidated.',
-      });
+    // Check blacklist - gracefully handle Redis errors
+    try {
+      const isBlacklisted = await redisClient.exists(`blacklist:${token}`);
+      if (isBlacklisted) {
+        return res.status(401).json({
+          success: false,
+          message: 'Token has been invalidated.',
+        });
+      }
+    } catch (redisError) {
+      console.error('Redis blacklist check error:', redisError);
+      // Continue without blacklist check if Redis fails
     }
 
     req.user = decoded;
     
-    const cachedUser = await redisClient.get(`user:${decoded.id}`);
-    if (cachedUser) {
-      req.user = { ...req.user, ...cachedUser };
+    // Try to get cached user data - don't fail if Redis is down
+    try {
+      const cachedUser = await redisClient.get(`user:${decoded.id}`);
+      if (cachedUser) {
+        req.user = { ...req.user, ...cachedUser };
+      }
+    } catch (redisError) {
+      console.error('Redis get user error:', redisError);
+      // Continue without cached data if Redis fails
     }
 
     next();

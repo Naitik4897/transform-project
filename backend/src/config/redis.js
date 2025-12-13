@@ -13,22 +13,50 @@ try {
     // Wrap Upstash client to handle JSON serialization
     redisClient = {
       get: async (key) => {
-        const value = await upstashClient.get(key);
-        return value;
+        try {
+          const value = await upstashClient.get(key);
+          return value;
+        } catch (error) {
+          console.error('Redis get error:', error);
+          return null;
+        }
       },
       set: async (key, value, ttl) => {
-        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-        if (ttl) {
-          return await upstashClient.setex(key, ttl, serialized);
+        try {
+          const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+          if (ttl) {
+            return await upstashClient.setex(key, ttl, serialized);
+          }
+          return await upstashClient.set(key, serialized);
+        } catch (error) {
+          console.error('Redis set error:', error);
+          return null;
         }
-        return await upstashClient.set(key, serialized);
       },
       del: async (key) => {
-        return await upstashClient.del(key);
+        try {
+          return await upstashClient.del(key);
+        } catch (error) {
+          console.error('Redis del error:', error);
+          return 0;
+        }
       },
       setex: async (key, seconds, value) => {
-        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-        return await upstashClient.setex(key, seconds, serialized);
+        try {
+          const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+          return await upstashClient.setex(key, seconds, serialized);
+        } catch (error) {
+          console.error('Redis setex error:', error);
+          return null;
+        }
+      },
+      exists: async (key) => {
+        try {
+          return await upstashClient.exists(key);
+        } catch (error) {
+          console.error('Redis exists error:', error);
+          return 0;
+        }
       },
     };
     console.log('✅ Redis (Upstash) connected');
@@ -54,6 +82,9 @@ try {
         setTimeout(() => cache.delete(key), seconds * 1000);
         return 'OK';
       },
+      exists: async (key) => {
+        return cache.has(key) ? 1 : 0;
+      },
     };
   }
 } catch (error) {
@@ -69,6 +100,14 @@ try {
     del: async (key) => {
       cache.delete(key);
       return 1;
+    },
+    setex: async (key, seconds, value) => {
+      cache.set(key, value);
+      setTimeout(() => cache.delete(key), seconds * 1000);
+      return 'OK';
+    },
+    exists: async (key) => {
+      return cache.has(key) ? 1 : 0;
     },
   };
 }
