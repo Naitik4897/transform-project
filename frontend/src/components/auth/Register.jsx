@@ -49,7 +49,7 @@ const registerSchema = yup.object().shape({
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState('');
@@ -63,6 +63,30 @@ const Register = () => {
     resolver: yupResolver(registerSchema),
     mode: 'onBlur',
   });
+
+  // Helper function to get dashboard path based on role
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case ROLES.ADMIN:
+      case ROLES.MANAGER:
+        return '/admin';
+      case ROLES.QA:
+        return '/qa';
+      case ROLES.AGENT:
+        return '/agent';
+      default:
+        return '/';
+    }
+  };
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('✅ Already authenticated, redirecting to dashboard...');
+      const dashboardPath = getDashboardPath(user.role);
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const onSubmit = async (data) => {
     try {

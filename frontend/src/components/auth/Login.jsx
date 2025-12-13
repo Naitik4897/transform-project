@@ -26,7 +26,7 @@ const loginSchema = yup.object().shape({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +39,15 @@ const Login = () => {
     resolver: yupResolver(loginSchema),
     mode: 'onBlur',
   });
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('✅ Already authenticated, redirecting to dashboard...');
+      const dashboardPath = getDashboardPath(user.role);
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const onSubmit = async (data) => {
     try {
