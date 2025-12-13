@@ -49,15 +49,35 @@ const TaskManagement = () => {
   // Fetch agents and QAs
   const fetchUsers = async () => {
     try {
+      console.log('Fetching agents and QAs...');
       const [agentsRes, qasRes] = await Promise.all([
         userAPI.getAllUsers({ role: 'agent', limit: 100 }),
         userAPI.getAllUsers({ role: 'qa', limit: 100 }),
       ]);
-      setAgents(agentsRes.data.users || []);
-      setQAs(qasRes.data.users || []);
+      
+      console.log('Agents response:', agentsRes);
+      console.log('QAs response:', qasRes);
+      
+      // Handle both response structures
+      const agentsList = agentsRes?.data?.users || agentsRes?.users || [];
+      const qasList = qasRes?.data?.users || qasRes?.users || [];
+      
+      console.log('Agents list:', agentsList);
+      console.log('QAs list:', qasList);
+      
+      setAgents(agentsList);
+      setQAs(qasList);
+      
+      if (agentsList.length === 0) {
+        console.warn('No agents found');
+      }
+      if (qasList.length === 0) {
+        console.warn('No QAs found');
+      }
     } catch (error) {
       console.error('Fetch users error:', error);
-      toast.error('Failed to fetch users');
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Failed to fetch users');
     }
   };
 

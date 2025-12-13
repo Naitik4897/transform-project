@@ -13,18 +13,31 @@ class UserController {
       const { role, page = 1, limit = 10, search = '' } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = { isActive: true };
+      // Build query - only get active users (if isActive field exists)
+      const query = {};
       
+      // Add role filter if provided
       if (role && Object.values(ROLES).includes(role)) {
         query.role = role;
+        console.log('Filtering by role:', role);
       }
       
+      // Only check isActive if it's a field (for backward compatibility)
+      // Since we do hard deletes now, this may not be needed
+      query.$or = [
+        { isActive: true },
+        { isActive: { $exists: false } }
+      ];
+      
       if (search) {
-        query.$or = [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-        ];
+        const searchQuery = {
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { lastName: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+          ]
+        };
+        query.$and = [searchQuery];
       }
 
       const [users, total] = await Promise.all([
@@ -35,6 +48,8 @@ class UserController {
           .limit(parseInt(limit)),
         User.countDocuments(query),
       ]);
+
+      console.log(`Found ${users.length} users with role filter:`, role);
 
       const result = {
         users,
