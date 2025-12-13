@@ -98,7 +98,7 @@ class AuthController {
         message: 'Login successful',
         data: {
           user: user.toJSON(),
-          token: token,
+          token: token, // Include for debugging
           role: user.role,
         },
       });
@@ -190,32 +190,34 @@ class AuthController {
         lastName: user.lastName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || process.env.JWT_EXPIRE || '7d' }
     );
 
     return token;
   }
 
   static setAuthCookie(res, token) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always true for HTTPS
+      secure: true, // Always true for HTTPS in production
       sameSite: 'none', // Required for cross-origin cookies
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       path: '/', // Available on all paths
     };
     
     res.cookie('token', token, cookieOptions);
     
-    // Also send token in response for debugging
-    console.log('✅ Auth cookie set:', { 
+    // Log cookie being set
+    console.log('✅ Setting auth cookie:', {
+      httpOnly: true,
       secure: true,
       sameSite: 'none',
       maxAge: '7 days',
-      path: '/' 
+      path: '/'
     });
+    
+    // Also return token in response body for verification
+    return token;
   }
 }
 

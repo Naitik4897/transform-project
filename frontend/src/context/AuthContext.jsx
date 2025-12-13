@@ -8,6 +8,7 @@ import { ROLES } from '../utils/constants';
 
 const AuthContext = createContext({});
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -17,41 +18,51 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state - check if user is already logged in
   useEffect(() => {
+    let isMounted = true;
+    
     const initAuth = async () => {
       try {
         console.log('🔄 Initializing auth - checking for existing session...');
-        console.log('Current URL:', window.location.href);
+        console.log('📍 Current URL:', window.location.href);
+        console.log('📍 Current path:', window.location.pathname);
         
         // Always try to get current user - the httpOnly cookie will be sent automatically
         const response = await authAPI.getCurrentUser();
         console.log('📥 getCurrentUser response:', response);
         
-        if (response.success && response.data?.user) {
+        if (isMounted && response.success && response.data?.user) {
           setUser(response.data.user);
           console.log('✅ User authenticated:', response.data.user.email, 'Role:', response.data.user.role);
           console.log('✅ Session is valid - staying logged in');
         } else {
           console.log('❌ Invalid response - no user data');
-          setUser(null);
+          if (isMounted) setUser(null);
         }
       } catch (error) {
         // If 401, user is not authenticated - this is expected
         if (error.response?.status === 401) {
           console.log('⚠️ No valid session (401) - user not authenticated');
+          console.log('📍 Path:', window.location.pathname);
           console.log('Error details:', error.response?.data);
         } else {
           console.error('❌ Auth initialization error:', error);
           console.error('Error status:', error.response?.status);
           console.error('Error data:', error.response?.data);
         }
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setLoading(false);
-        console.log('✅ Auth initialization complete');
+        if (isMounted) {
+          setLoading(false);
+          console.log('✅ Auth initialization complete - loading:', false);
+        }
       }
     };
 
     initAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Login function
