@@ -79,8 +79,11 @@ const SimpleAdminDashboard = () => {
       }
     } catch (error) {
       console.error('Add user error:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to add user';
-      toast.error(errorMessage);
+      // Only show error if it's not a permission-related issue (since register doesn't need auth)
+      if (error?.response?.status !== 403 && error?.response?.status !== 401) {
+        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to add user';
+        toast.error(errorMessage);
+      }
     }
   };
 

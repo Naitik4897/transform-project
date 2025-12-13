@@ -114,12 +114,24 @@ class AuthController {
 
   static async logout(req, res) {
     try {
+      const token = req.cookies.token;
+      
+      // Blacklist the token if it exists
+      if (token) {
+        try {
+          await redisClient.setex(`blacklist:${token}`, 7 * 24 * 60 * 60, 'true');
+        } catch (redisError) {
+          console.error('Redis blacklist error:', redisError);
+        }
+      }
+      
       const isProduction = process.env.NODE_ENV === 'production';
       
       const cookieOptions = {
         httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
       };
       
       if (isProduction && process.env.COOKIE_DOMAIN) {
@@ -127,6 +139,7 @@ class AuthController {
       }
       
       res.clearCookie('token', cookieOptions);
+      console.log('Logout: Cookie cleared');
 
       res.status(200).json({
         success: true,
@@ -194,9 +207,15 @@ class AuthController {
       path: '/', // Ensure cookie is sent with all requests
     };
     
-    // Don't set domain for Render deployments (they handle this automatically)
+    // Add domain for production to ensure cookie is shared across subdomains
+    if (isProduction && process.env.COOKIE_DOMAIN) {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
     
     res.cookie('token', token, cookieOptions);
+    
+    // Log for debugging
+    console.log('Setting auth cookie with options:', { ...cookieOptions, token: '***' });
   }
 }
 

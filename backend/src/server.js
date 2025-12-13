@@ -48,8 +48,21 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, { 
+    hasCookie: !!req.cookies?.token,
+    origin: req.get('origin')
+  });
+  next();
+});
 
 connectDB();
 
