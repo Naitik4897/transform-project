@@ -6,11 +6,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    copyPublicDir: true,
   },
   server: {
     port: 5173,
+    historyApiFallback: true,
   },
   preview: {
     port: 5173,
+    historyApiFallback: true,
   }
 })

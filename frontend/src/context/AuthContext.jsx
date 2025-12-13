@@ -76,15 +76,15 @@ export const AuthProvider = ({ children }) => {
       // Force clear any cached state
       localStorage.clear();
       sessionStorage.clear();
-      // Use window.location for full page reload to clear all state
-      window.location.replace('/login');
+      // Use window.location.href for navigation
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout API fails, clear local state
       setUser(null);
       localStorage.clear();
       sessionStorage.clear();
-      window.location.replace('/login');
+      window.location.href = '/login';
     }
   };
 
