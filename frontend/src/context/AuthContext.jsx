@@ -19,12 +19,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('Initializing auth - checking for existing session...');
         // Always try to get current user - the httpOnly cookie will be sent automatically
         const response = await authAPI.getCurrentUser();
         console.log('getCurrentUser response:', response);
-        if (response.success) {
+        if (response.success && response.data?.user) {
           setUser(response.data.user);
-          console.log('User authenticated:', response.data.user.email);
+          console.log('✅ User authenticated:', response.data.user.email, 'Role:', response.data.user.role);
+        } else {
+          console.log('❌ Invalid response - no user data');
+          setUser(null);
         }
       } catch (error) {
         // If 401, user is not authenticated - this is expected
@@ -46,10 +50,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
+      console.log('Logging in user:', email);
       const response = await authAPI.login({ email, password });
-      setUser(response.data.user);
-      return { success: true, role: response.data.role };
+      console.log('Login response:', response);
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
+        console.log('✅ Login successful, user set:', response.data.user.email);
+        return { success: true, role: response.data.user.role };
+      }
+      return { success: false, error: 'Invalid response from server' };
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.response?.data?.message || 'Login failed');
       return { success: false, error: error.response?.data?.message };
     }

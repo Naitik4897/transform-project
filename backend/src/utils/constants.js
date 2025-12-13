@@ -12,8 +12,8 @@ const ROLES = {
 const PERMISSIONS = {
   [ROLES.ADMIN]: ['view_users', 'add_users', 'update_users', 'delete_users', 'view_all_tasks', 'add_tasks', 'update_tasks', 'delete_tasks', 'assign_qa'],
   [ROLES.MANAGER]: ['view_users', 'add_users', 'update_users', 'view_all_tasks', 'add_tasks', 'update_tasks', 'delete_tasks', 'assign_qa'],
-  [ROLES.QA]: ['view_assigned_tasks', 'review_tasks', 'view_team_tasks'],
-  [ROLES.AGENT]: ['view_assigned_tasks', 'update_task_status'],
+  [ROLES.QA]: ['view_assigned_tasks', 'review_tasks', 'view_team_tasks', 'update_tasks'],
+  [ROLES.AGENT]: ['view_assigned_tasks', 'update_task_status', 'update_tasks'],
 };
 
 const TASK_STATUS = {

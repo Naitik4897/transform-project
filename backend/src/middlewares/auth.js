@@ -11,8 +11,12 @@ const authenticate = async (req, res, next) => {
     const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
     
     if (!token) {
-      console.log('No token found in cookies or headers');
-      console.log('Cookies:', req.cookies);
+      console.log('Auth failed: No token', {
+        hasCookies: !!req.cookies,
+        cookieKeys: Object.keys(req.cookies || {}),
+        hasAuthHeader: !!req.headers.authorization,
+        path: req.path
+      });
       return res.status(401).json({
         success: false,
         message: 'Access denied. No token provided.',

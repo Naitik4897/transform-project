@@ -20,19 +20,20 @@ router.post(
 
 router.get(
   '/',
+  authorize('admin', 'manager', 'qa', 'agent'),
   TaskController.getAllTasks
 );
 
 router.put(
   '/:id',
-  authorize('admin', 'manager'),
+  authorize('admin', 'manager', 'qa', 'agent'),
   checkPermission('update_tasks'),
   TaskController.updateTask
 );
 
 router.delete(
   '/:id',
-  authorize('admin'),
+  authorize('admin', 'manager'),
   checkPermission('delete_tasks'),
   TaskController.deleteTask
 );

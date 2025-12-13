@@ -158,11 +158,8 @@ class UserController {
         });
       }
 
-      const user = await User.findByIdAndUpdate(
-        id,
-        { isActive: false },
-        { new: true }
-      ).select('-password -__v');
+      // Hard delete - permanently remove from database
+      const user = await User.findByIdAndDelete(id);
 
       if (!user) {
         return res.status(404).json({
@@ -171,10 +168,17 @@ class UserController {
         });
       }
 
+      // Clear from Redis cache
+      try {
+        await redisClient.del(CACHE_KEYS.USER(id));
+      } catch (redisError) {
+        console.error('Redis delete error:', redisError);
+      }
+
       res.status(200).json({
         success: true,
-        message: 'User deleted successfully',
-        data: { user: user.toJSON() },
+        message: 'User permanently deleted from database',
+        data: { userId: id },
       });
     } catch (error) {
       console.error('Delete user error:', error);
