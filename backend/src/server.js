@@ -19,7 +19,13 @@ dotenv.config();
 
 const app = express();
 
-app.use(helmet());
+// Configure helmet to allow cookies and credentials
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false, // Disable CSP for API
+}));
+
+// Cookie parser MUST come before CORS
 app.use(cookieParser());
 
 // Support multiple origins for CORS
@@ -42,14 +48,22 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true, // CRITICAL: Allow credentials (cookies)
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   exposedHeaders: ['Set-Cookie'],
+  preflightContinue: false,
 };
 
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Handle preflight for all routes
+app.options('/*', cors(corsOptions));
+
+// Trust proxy - required for Render and similar platforms
+app.set('trust proxy', 1);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -60,6 +74,7 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.includes('/api/')) {
       console.log(`${req.method} ${req.path}`, { 
         hasCookie: !!req.cookies?.token,
+        cookieCount: Object.keys(req.cookies || {}).length,
         origin: req.get('origin')
       });
     }
@@ -76,6 +91,18 @@ app.use('/api/tasks', taskRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint to check cookies
+app.get('/api/debug/cookies', (req, res) => {
+  res.json({
+    hasCookies: !!req.cookies,
+    cookies: req.cookies,
+    headers: {
+      cookie: req.headers.cookie,
+      origin: req.headers.origin,
+    }
+  });
 });
 
 app.use(errorHandler);

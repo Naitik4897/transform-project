@@ -16,10 +16,13 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // You can add auth token here if not using cookies
+    // Log outgoing requests in development
+    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log('  withCredentials:', config.withCredentials);
     return config;
   },
   (error) => {
+    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
