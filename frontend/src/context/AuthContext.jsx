@@ -72,19 +72,15 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authAPI.logout();
-      setUser(null);
-      // Force clear any cached state
-      localStorage.clear();
-      sessionStorage.clear();
-      // Use window.location.href for navigation
-      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if logout API fails, clear local state
+    } finally {
+      // Always clear state and redirect, even if API call fails
       setUser(null);
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = '/login';
+      // Use a full page reload to /login to ensure clean state
+      window.location.assign('/login');
     }
   };
 

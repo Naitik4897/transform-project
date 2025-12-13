@@ -24,7 +24,7 @@ const Header = ({ onMenuToggle }) => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    // Navigation is handled in logout function
   };
 
   const getUserInitials = () => {
