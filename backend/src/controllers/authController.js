@@ -202,21 +202,19 @@ class AuthController {
     const cookieOptions = {
       httpOnly: true,
       secure: true, // Always true for HTTPS
-      sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-origin
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days to match JWT expiry
-      path: '/', // Ensure cookie is sent with all requests
+      sameSite: 'none', // Required for cross-origin cookies
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/', // Available on all paths
     };
-    
-    // Don't set domain - let browser handle it automatically
     
     res.cookie('token', token, cookieOptions);
     
-    // Log for debugging
-    console.log('Setting auth cookie:', { 
-      isProduction, 
-      secure: cookieOptions.secure,
-      sameSite: cookieOptions.sameSite,
-      maxAge: cookieOptions.maxAge 
+    // Also send token in response for debugging
+    console.log('✅ Auth cookie set:', { 
+      secure: true,
+      sameSite: 'none',
+      maxAge: '7 days',
+      path: '/' 
     });
   }
 }

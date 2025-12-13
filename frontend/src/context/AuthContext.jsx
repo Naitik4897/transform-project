@@ -19,13 +19,17 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('Initializing auth - checking for existing session...');
+        console.log('🔄 Initializing auth - checking for existing session...');
+        console.log('Current URL:', window.location.href);
+        
         // Always try to get current user - the httpOnly cookie will be sent automatically
         const response = await authAPI.getCurrentUser();
-        console.log('getCurrentUser response:', response);
+        console.log('📥 getCurrentUser response:', response);
+        
         if (response.success && response.data?.user) {
           setUser(response.data.user);
           console.log('✅ User authenticated:', response.data.user.email, 'Role:', response.data.user.role);
+          console.log('✅ Session is valid - staying logged in');
         } else {
           console.log('❌ Invalid response - no user data');
           setUser(null);
@@ -33,13 +37,17 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         // If 401, user is not authenticated - this is expected
         if (error.response?.status === 401) {
-          console.log('No valid session, user not authenticated');
+          console.log('⚠️ No valid session (401) - user not authenticated');
+          console.log('Error details:', error.response?.data);
         } else {
-          console.error('Auth initialization error:', error);
+          console.error('❌ Auth initialization error:', error);
+          console.error('Error status:', error.response?.status);
+          console.error('Error data:', error.response?.data);
         }
         setUser(null);
       } finally {
         setLoading(false);
+        console.log('✅ Auth initialization complete');
       }
     };
 

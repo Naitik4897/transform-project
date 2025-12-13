@@ -35,16 +35,18 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS allowed for origin:', origin);
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      console.log('❌ CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
 };
 
 app.use(cors(corsOptions));
@@ -52,14 +54,18 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log all requests for debugging
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, { 
-    hasCookie: !!req.cookies?.token,
-    origin: req.get('origin')
+// Log all requests for debugging (only in production for troubleshooting)
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.path.includes('/api/')) {
+      console.log(`${req.method} ${req.path}`, { 
+        hasCookie: !!req.cookies?.token,
+        origin: req.get('origin')
+      });
+    }
+    next();
   });
-  next();
-});
+}
 
 connectDB();
 
