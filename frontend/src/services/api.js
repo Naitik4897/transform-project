@@ -30,20 +30,43 @@ api.interceptors.response.use(
     return response.data;
   },
   async (error) => {
-    console.error('API Error:', error);
+    // Log detailed error information for debugging
+    console.error('API Error Details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error - API might be down or unreachable');
+      toast.error('Unable to connect to server. Please check your connection.');
+      return Promise.reject(error);
+    }
     
     // Handle 401 Unauthorized - but don't redirect if it's the /me endpoint (initial auth check)
     if (error.response?.status === 401) {
       // Only redirect if it's not the initial auth check
       if (!error.config?.url?.includes('/auth/me')) {
+        toast.error('Session expired. Please login again.');
         localStorage.clear();
         sessionStorage.clear();
-        window.location.replace('/login');
+        window.location.assign('/login');
       }
     }
     
-    // Don't show toast here since we're handling it in the components
-    // Just reject with the error so components can handle it
+    // Handle 403 Forbidden
+    if (error.response?.status === 403) {
+      toast.error('You do not have permission to perform this action.');
+    }
+    
+    // Handle 500 Server Error
+    if (error.response?.status >= 500) {
+      toast.error('Server error. Please try again later.');
+    }
+    
     return Promise.reject(error);
   }
 );

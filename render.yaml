@@ -1,4 +1,17 @@
 services:
+  # Backend API Service
+  - type: web
+    name: transform-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: https://transform-frontend-p5q3.onrender.com
+  
+  # Frontend Static Site
   - type: web
     name: transform-frontend
     env: static

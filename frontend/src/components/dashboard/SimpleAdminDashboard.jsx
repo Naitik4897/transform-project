@@ -31,17 +31,22 @@ const SimpleAdminDashboard = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching users from API...');
       const response = await userAPI.getAllUsers();
       console.log('Fetch users response:', response);
+      
       if (response?.success && response?.data?.users) {
+        console.log('Users loaded successfully:', response.data.users.length, 'users');
         setUsers(response.data.users);
       } else {
         console.error('Invalid response format:', response);
-        toast.error('Invalid response format');
+        toast.error('Invalid response format from server');
       }
     } catch (error) {
       console.error('Fetch users error:', error);
-      toast.error('Failed to fetch users');
+      console.error('Error details:', error.response?.data);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch users';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
