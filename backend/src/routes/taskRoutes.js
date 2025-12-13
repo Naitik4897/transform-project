@@ -4,37 +4,37 @@
 
 import express from 'express';
 import TaskController from '../controllers/taskController.js';
-import { authenticate, authorize, checkPermission } from '../middlewares/auth.js';
+import { authenticate, authorize } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 router.use(authenticate);
 
-
+// Admin and Manager can create tasks
 router.post(
   '/',
   authorize('admin', 'manager'),
-  checkPermission('add_tasks'),
   TaskController.createTask
 );
 
+// All authenticated users can view tasks
 router.get(
   '/',
   authorize('admin', 'manager', 'qa', 'agent'),
   TaskController.getAllTasks
 );
 
+// All authenticated users can update tasks
 router.put(
   '/:id',
   authorize('admin', 'manager', 'qa', 'agent'),
-  checkPermission('update_tasks'),
   TaskController.updateTask
 );
 
+// Admin and Manager can delete tasks
 router.delete(
   '/:id',
   authorize('admin', 'manager'),
-  checkPermission('delete_tasks'),
   TaskController.deleteTask
 );
 

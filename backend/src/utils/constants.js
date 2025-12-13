@@ -9,12 +9,11 @@ const ROLES = {
   AGENT: 'agent',
 };
 
-const PERMISSIONS = {
-  [ROLES.ADMIN]: ['view_users', 'add_users', 'update_users', 'delete_users', 'view_all_tasks', 'add_tasks', 'update_tasks', 'delete_tasks', 'assign_qa'],
-  [ROLES.MANAGER]: ['view_users', 'add_users', 'update_users', 'view_all_tasks', 'add_tasks', 'update_tasks', 'delete_tasks', 'assign_qa'],
-  [ROLES.QA]: ['view_assigned_tasks', 'review_tasks', 'view_team_tasks', 'update_tasks'],
-  [ROLES.AGENT]: ['view_assigned_tasks', 'update_task_status', 'update_tasks'],
-};
+// Simple role-based access:
+// ADMIN: Full access to everything
+// MANAGER: Same as Admin except cannot delete users
+// QA: View and update their team's tasks
+// AGENT: View and update their assigned tasks
 
 const TASK_STATUS = {
   PENDING: 'pending',
@@ -46,7 +45,6 @@ const CACHE_TTL = {
 
 export {
   ROLES,
-  PERMISSIONS,
   TASK_STATUS,
   TASK_PRIORITY,
   CACHE_KEYS,

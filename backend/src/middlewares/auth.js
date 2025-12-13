@@ -3,7 +3,7 @@
 // Description: Authentication and authorization middleware for JWT verification and role-based access
 
 import jwt from 'jsonwebtoken';
-import { ROLES, PERMISSIONS } from '../utils/constants.js';
+import { ROLES } from '../utils/constants.js';
 import redisClient from '../config/redis.js';
 
 const authenticate = async (req, res, next) => {
@@ -95,30 +95,7 @@ const authorize = (...allowedRoles) => {
   };
 };
 
-const checkPermission = (permission) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required.',
-      });
-    }
-
-    const userRole = req.user.role;
-    
-    if (!PERMISSIONS[userRole] || !PERMISSIONS[userRole].includes(permission)) {
-      return res.status(403).json({
-        success: false,
-        message: `Insufficient permissions for this action. Required: ${permission}`,
-      });
-    }
-
-    next();
-  };
-};
-
 export {
   authenticate,
   authorize,
-  checkPermission,
 };
