@@ -56,11 +56,8 @@ const corsOptions = {
   preflightContinue: false,
 };
 
-// Apply CORS middleware
+// Apply CORS middleware - it handles preflight automatically
 app.use(cors(corsOptions));
-
-// Handle preflight for all routes
-app.options('/*', cors(corsOptions));
 
 // Trust proxy - required for Render and similar platforms
 app.set('trust proxy', 1);
